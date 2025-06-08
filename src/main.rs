@@ -3,10 +3,12 @@ mod emoji;
 mod progresser;
 pub mod utils;
 
-use crate::{counter::Counter, progresser::Bar};
-use console::style;
+use crate::{
+    counter::Counter,
+    progresser::{Bar, print_step},
+};
 use indicatif::HumanDuration;
-use std::{env, error::Error, num::NonZeroUsize, path::Path, time::Instant};
+use std::{env, error::Error, num::NonZeroUsize, path::Path, thread, time::Instant};
 
 pub const CHUNK_SIZE: usize = 10;
 
@@ -16,42 +18,28 @@ fn main() -> Result<(), Box<dyn Error>> {
     let source_path = Path::new(&args[1]);
     let start = Instant::now();
 
-    println!(
-        "{} {}Resolving text files...",
-        style("[1/3]").bold().dim(),
-        emoji::FOLDER
-    );
+    print_step(1, emoji::FOLDER, "Resolving text files...");
     // let files = find_text_files(Path::new(source_path))?;
     let mut counter = Counter::new(source_path).expect("Failed to read the path.");
-    println!(
-        "{} {}Processing files...",
-        style("[2/3]").bold().dim(),
-        emoji::FILE
-    );
+    print_step(2, emoji::FILE, "Processing files...");
 
     let bars = Bar::new();
+    let process_bar = bars.generate(Some(counter.files.len() as _), "processing");
+    let combine_bar = bars.generate(None, "combining");
 
-    let process_bar = bars.generate(counter.files.len() as _, "processing");
+    let word_count = thread::scope(|s| -> utils::Dict {
+        let map = counter.process_and_collect(s, &process_bar, &combine_bar);
 
-    counter.process(&process_bar);
+        process_bar.finish_and_clear();
+        combine_bar.finish_and_clear();
+        map
+    });
 
-    let combine_bar = bars.generate(counter.handles.len() as _, "combining");
-    combine_bar.suspend(|| {});
+    print_step(3, emoji::COUNT, "Writing results...");
 
-    let map = counter.collect(&combine_bar, || combine_bar.reset_eta());
-
-    process_bar.finish_and_clear();
-    combine_bar.finish_and_clear();
-
-    println!(
-        "{} {}Writing results...",
-        style("[3/3]").bold().dim(),
-        emoji::COUNT
-    );
-
-    let mut sorted_map = map.iter().collect::<Vec<_>>();
-    sorted_map.sort_by(|a, b| (b.1).cmp(a.1));
-    utils::output_result(&sorted_map, NonZeroUsize::new(10));
+    let mut sorted_word_count = word_count.iter().collect::<Vec<_>>();
+    sorted_word_count.sort_by(|a, b| (b.1).cmp(a.1));
+    utils::output_result(&sorted_word_count, NonZeroUsize::new(10));
 
     let elapsed = start.elapsed();
 
@@ -59,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "{} Done in {} | Map count: {} words | Speed: {:.2} words/ms",
         emoji::SPARKLE,
         HumanDuration(elapsed),
-        sorted_map.len(),
+        sorted_word_count.len(),
         counter.word_count as f64 / elapsed.as_millis() as f64
     );
     Ok(())

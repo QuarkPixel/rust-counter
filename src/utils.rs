@@ -28,7 +28,7 @@ pub fn find_text_files(dir: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-pub fn calc_word(chunk: Vec<PathBuf>, progress: ProgressBar) -> Dict {
+pub fn calc_word(chunk: &[PathBuf], progress: &ProgressBar) -> Dict {
     let mut local_map = HashMap::new();
     for path in chunk.iter() {
         if let Ok(text) = fs::read_to_string(path) {
@@ -52,6 +52,6 @@ pub fn output_result(result: &Vec<(&CompactString, &u32)>, output_length: Option
         .min(result.len());
 
     for (i, &(key, value)) in result.iter().take(length).enumerate() {
-        println!("{:>4}{}: {}", format!("{}.", i + 1), key, value);
+        println!("{:>4}{}:{}", format!("{}.", i + 1), key, value);
     }
 }
