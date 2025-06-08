@@ -1,5 +1,8 @@
 use std::{
-    collections::HashMap, fs, io, num::NonZeroUsize, path::{Path, PathBuf}
+    collections::HashMap,
+    fs, io,
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
 };
 
 use compact_str::CompactString;
@@ -43,17 +46,12 @@ pub fn calc_word(chunk: Vec<PathBuf>, progress: ProgressBar) -> Dict {
     local_map
 }
 
-pub fn output_result(
-    result: &Vec<(&CompactString, &u32)>,
-    output_length: Option<NonZeroUsize>,
-) -> io::Result<()> {
-    // let mut output_file = File::create("output.txt")?;
+pub fn output_result(result: &Vec<(&CompactString, &u32)>, output_length: Option<NonZeroUsize>) {
     let length = output_length
         .map_or_else(|| 0, |num| num.get())
         .min(result.len());
 
     for (i, &(key, value)) in result.iter().take(length).enumerate() {
-        println!("{:>3}{}: {}", format!("{}.", i + 1), key, value);
+        println!("{:>4}{}: {}", format!("{}.", i + 1), key, value);
     }
-    Ok(())
 }

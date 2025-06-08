@@ -38,7 +38,7 @@ impl Counter {
 
     pub fn collect<F>(&mut self, progress: &ProgressBar, init: F) -> Dict
     where
-        F: FnOnce() -> (),
+        F: FnOnce(),
     {
         let mut init = Some(init);
         let mut total_map: Dict = HashMap::new();

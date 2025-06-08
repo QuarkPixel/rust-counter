@@ -3,10 +3,10 @@ mod emoji;
 mod progresser;
 pub mod utils;
 
+use crate::{counter::Counter, progresser::Bar};
 use console::style;
 use indicatif::HumanDuration;
 use std::{env, error::Error, num::NonZeroUsize, path::Path, time::Instant};
-use crate::{counter::Counter, progresser::Bar};
 
 pub const CHUNK_SIZE: usize = 10;
 
@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut sorted_map = map.iter().collect::<Vec<_>>();
     sorted_map.sort_by(|a, b| (b.1).cmp(a.1));
-    utils::output_result(&sorted_map, NonZeroUsize::new(10))?;
+    utils::output_result(&sorted_map, NonZeroUsize::new(10));
 
     let elapsed = start.elapsed();
 
