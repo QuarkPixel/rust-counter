@@ -6,6 +6,7 @@ use std::{
 };
 
 use compact_str::CompactString;
+use console::style;
 use indicatif::ProgressBar;
 
 pub type Dict = HashMap<CompactString, u32>;
@@ -48,10 +49,12 @@ pub fn calc_word(chunk: &[PathBuf], progress: &ProgressBar) -> Dict {
 
 pub fn output_result(result: &Vec<(&CompactString, &u32)>, output_length: Option<NonZeroUsize>) {
     let length = output_length
-        .map_or_else(|| 0, |num| num.get())
+        .map_or_else(|| result.len(), |num| num.get())
         .min(result.len());
 
+    println!("    {}", style("RESULT").bold().green());
     for (i, &(key, value)) in result.iter().take(length).enumerate() {
-        println!("{:>4}{}:{}", format!("{}.", i + 1), key, value);
+        println!("{:>4}{}: {}", format!("{}.", i + 1), key, value);
     }
+    println!();
 }
